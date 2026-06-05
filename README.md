@@ -144,34 +144,34 @@ drawn in **[docs/workflow.md](docs/workflow.md)**.
 
 > Claude Code is the current requirement only because it is how the project is implemented today. The framework is meant to be **LLM-agnostic** — the agents, IR schema, and workflow carry no Claude-specific assumptions, and support for other agent runtimes may land soon.
 
-1. Create your project from the template. On GitHub, click **Use this template → Create a
-  new repository** (this is a template repository), then clone your new repo:
-  ```bash
-  git clone https://github.com/<you>/<my-project> && cd <my-project>
-  ```
-  Your project is an independent repo with no shared history; pull framework updates later
-  with `./sync-framework.sh` (see [Staying in sync](#staying-in-sync-with-the-framework)).
+1. ***Create your project from this template repository.***\
+   On [GitHub](https://github.com/simoneventuri/semantic-autoencoder), click **Use this template → Create a new repository** (top-right), then clone your new repo:
+   ```bash
+   git clone https://github.com/<you>/<my-project> && cd <my-project>
+   ```
+   Your project is an independent repo with no shared history; pull framework updates later
+   with `./sync-framework.sh` (see [Staying in sync](#staying-in-sync-with-the-framework)).
 
-2. Copy your legacy code into encoded/
-  ```bash
-  cp -r /path/to/legacy/code encoded/legacy/<project-name>
-  # or: git submodule add <url> encoded/legacy/<project-name>
-  ```
+2. Copy your legacy code into `encoded/`:
+   ```bash
+   cp -r /path/to/legacy/code encoded/legacy/<project-name>
+   # or: git submodule add <url> encoded/legacy/<project-name>
+   ```
 
-3. Open Claude Code and run setup
-  ```bash
-  claude
-  > /setup
-  ```
-  `/setup` interviews you about the codebase, domain, and preferences, then:
-  - Writes `config/project_config.yaml`
-  - Creates the `explain-domain` skill (domain reference knowledge for all agents)
-  - Creates the `run-legacy` skill (how to execute the original code)
+3. Open Claude Code and run setup:
+   ```bash
+   claude
+   > /setup
+   ```
+   `/setup` interviews you about the codebase, domain, and preferences, then:
+   - Writes `config/project_config.yaml`
+   - Creates the `explain-domain` skill (domain reference knowledge for all agents)
+   - Creates the `run-legacy` skill (how to execute the original code)
 
 4. Start encoding:
-  ```
-  > /orchestrate
-  ```
+   ```
+   > /orchestrate
+   ```
 
 ---
 

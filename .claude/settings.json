@@ -29,7 +29,9 @@
       "Bash(./sync-framework.sh --list)",
       "Bash(./sync-framework.sh --help)",
       "Bash(gh --version)",
-      "Bash(gh auth *)"
+      "Bash(gh auth *)",
+      "Bash(gh repo *)",
+      "Bash(gh api *)"
     ],
     "deny": [
       "Write(encoded/legacy/**)",
