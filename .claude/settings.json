@@ -1,8 +1,5 @@
 {
   "permissions": {
-    "deny": [
-      "Write(encoded/legacy/*)"
-    ],
     "allow": [
       "Bash(git *)",
       "Bash(find . *)",
@@ -10,7 +7,33 @@
       "Bash(ls *)",
       "Bash(mkdir -p *)",
       "Bash(rm -rf workspaces/*)",
-      "Bash(rm -rf artifacts/*)"
+      "Bash(rm -rf artifacts/*)",
+      "Edit(/.claude/skills/setup/**)",
+      "Edit(/.claude/skills/orchestrate/**)",
+      "WebFetch(domain:gist.github.com)",
+      "Bash(command -v rsvg-convert)",
+      "Bash(rsvg-convert docs/assets/autoencoder.svg -o /tmp/ae.png)",
+      "Bash(command -v qlmanage)",
+      "Bash(qlmanage -t -s 800 -o /tmp docs/assets/autoencoder.svg)",
+      "Read(//tmp/**)",
+      "Bash(qlmanage -t -s 900 -o /tmp docs/assets/autoencoder.svg)",
+      "Bash(qlmanage -t -s 950 -o /tmp docs/assets/autoencoder.svg)",
+      "Bash(sips -g pixelWidth -g pixelHeight /tmp/autoencoder.svg.png)",
+      "Bash(python3 -c \"import cairosvg; cairosvg.svg2png\\(url='docs/assets/autoencoder.svg', write_to='/tmp/ae2.png', output_width=840\\)\")",
+      "Bash(sed 's/viewBox=\"0 0 840 260\" width=\"840\" height=\"260\"/viewBox=\"0 0 840 320\" width=\"840\" height=\"320\"/' docs/assets/autoencoder.svg)",
+      "Bash(qlmanage -t -s 840 -o /tmp /tmp/ae_pad.svg)",
+      "Bash(sed 's/viewBox=\"0 0 840 260\" width=\"840\" height=\"260\"/viewBox=\"-10 40 860 200\" width=\"860\" height=\"200\"/' docs/assets/autoencoder.svg)",
+      "Bash(qlmanage -t -s 1200 -o /tmp /tmp/ae_v.svg)",
+      "Bash(chmod +x sync-framework.sh)",
+      "Bash(bash -n sync-framework.sh)",
+      "Bash(./sync-framework.sh --list)",
+      "Bash(./sync-framework.sh --help)",
+      "Bash(gh --version)",
+      "Bash(gh auth *)"
+    ],
+    "deny": [
+      "Write(encoded/legacy/**)",
+      "Edit(encoded/legacy/**)"
     ]
   }
 }

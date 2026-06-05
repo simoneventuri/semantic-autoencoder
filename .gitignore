@@ -11,8 +11,11 @@ encoded/legacy/
 # Workspace outputs — always disposable
 workspaces/*/
 
-# Temporary artifacts — cleaned after merge
-# (leave the directory stub; delete subdirectories manually)
+# Planning artifacts — non-semantic, cleaned after merge (keep the .gitkeep stub)
+artifacts/*/
+
+# Transient output of sync-framework.sh
+framework-sync.patch
 
 # OS
 .DS_Store

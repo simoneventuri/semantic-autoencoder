@@ -99,7 +99,7 @@ flowchart TD
 |-------|-------|-------|--------|
 | Extract semantics | encoder ×1–3 (parallel; count set by orchestrator based on chunk complexity and user preference) | `encoded/legacy/` + accumulated `semantic_ir/canonical/` | `semantic_ir/chunk_NNN/` |
 | Generate regression data | tester | `encoded/legacy/` (binary) | `regression_tests/` |
-| Review quality | critic | `semantic_ir/chunk_NNN/` | `semantic_ir/canonical/99_review/` |
+| Review quality | critic | `semantic_ir/chunk_NNN/` | `semantic_ir/chunk_NNN/99_review/` |
 | Merge to canonical | merger | `semantic_ir/chunk_NNN/` | `semantic_ir/canonical/` |
 | Decode | decoder | `semantic_ir/canonical/` **only** | `decoded/` |
 | Validate decoded | tester | `regression_tests/` (reference) | `decoded/regression_tests/` |

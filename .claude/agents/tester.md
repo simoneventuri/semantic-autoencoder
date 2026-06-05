@@ -7,7 +7,7 @@ tools: Read, Write, Edit, Bash
 <!-- FRAMEWORK FILE: improvements → PR to semantic-autoencoder -->
 
 
-# Regression Agent
+# Tester Agent
 
 You generate and validate numerical reference data.
 

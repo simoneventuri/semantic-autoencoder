@@ -116,12 +116,12 @@ Present choices for three dimensions:
 
 **Procedure names in body text** (choose one):
 - Semantic prose only (recommended): code names appear only in `source:` fields
-- Italic on first use: *SetPaQ*
-- Backtick code-style: `SetPaQ()`
+- Italic on first use: *assembleMatrix*
+- Backtick code-style: `assembleMatrix()`
 
 **Acronyms** (choose one):
-- ALL CAPS (recommended): COM, PES, ODE
-- Mixed: CoM, PES
+- ALL CAPS (recommended): ODE, FFT, RHS
+- Mixed: DoF, FFT
 
 After the user chooses, create `semantic_ir/canonical/10_semantic_requirements/notation_style.md` from the template in `config/project_config.example.yaml` (see Notation Style section).
 
@@ -143,8 +143,7 @@ Record under `encoders:`.
 Present:
 > "Default model assignment:
 > - Orchestrator: `claude-opus-4-8`
-> - Encoder / Critic / Merger agents: `claude-sonnet-4-6`
-> - Tester Agent: `claude-opus-4-8`
+> - Encoder / Critic / Merger / Tester agents: `claude-sonnet-4-6`
 >
 > Should I use these defaults, or would you like to change either?"
 
@@ -195,6 +194,7 @@ TODO: List the 3–5 most important domain concepts an encoder needs to understa
 | `08_execution_model` | In what order does computation occur? | Dependencies? Events? |
 | `09_validation` | How do we know it's correct? | Tests? Reference data? |
 | `10_semantic_requirements` | What must any re-implementation do? | Required? Forbidden? Allowed? |
+| `11_pipeline_schematics` | How do stages connect into a pipeline? | What flows between stages? (merger-produced) |
 | `80_implementation_constraints` | Required APIs, file layouts, deployment | Only when justified |
 | `90_human_overrides` | Human-owned, highest priority | Never modified by agents |
 | `99_review` | Quality flags, gaps, contradictions | Critic findings |
@@ -317,6 +317,7 @@ encoders:
 
 references:
   supplementary: none | <description>
+  confidence: primary | secondary | skeptical | n/a
 
 models:
   orchestrator: claude-opus-4-8

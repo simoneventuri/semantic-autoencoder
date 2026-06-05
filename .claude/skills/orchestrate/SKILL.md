@@ -1,6 +1,6 @@
 ---
 name: orchestrate
-description: Coordinates the full semantic encoding pipeline. Dispatches encoder, regression, critic, merge, and decoder agents in the correct order. References docs/workflow.md as the canonical pipeline diagram.
+description: Coordinates the full semantic encoding pipeline. Dispatches encoder, tester, critic, merger, and decoder agents in the correct order. References docs/workflow.md as the canonical pipeline diagram.
 disable-model-invocation: true
 ---
 
@@ -114,7 +114,7 @@ For each chunk, execute in order:
 
 After all chunks in a part complete:
 
-1. Run the full Merge Protocol (merge agent handles this)
+1. Run the full Merge Protocol (merger agent handles this)
 2. Ask: "Part {P} is complete. Should I create a GitHub MR before moving on to the next part?"
 
 ---

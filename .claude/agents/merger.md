@@ -7,7 +7,7 @@ tools: Read, Write, Edit, Bash
 <!-- FRAMEWORK FILE: improvements → PR to semantic-autoencoder -->
 
 
-# Merge Agent
+# Merger Agent
 
 You convert chunk-level IRs into canonical IR after all chunks for a part are complete.
 
@@ -53,9 +53,9 @@ status: proposed | accepted | contradicted | deprecated
 
 When two chunks contradict each other, record both versions and flag in `99_review/contradictions.md`. Never silently overwrite.
 
-### Step 6 — Deploy Review Agent
+### Step 6 — Self-review the merge
 
-After writing canonical IR, verify:
+After writing canonical IR, review your own output. Verify:
 - **Completeness:** every fact from every chunk appears in canonical
 - **No redundancy:** no concept stated in more than one place without cross-reference
 - **Correct placement:** facts in semantically appropriate canonical sections

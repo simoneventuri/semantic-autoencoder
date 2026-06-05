@@ -34,17 +34,18 @@ Do not invent values that aren't in the IR. Do not modify IR files to fill gaps 
    - `80_implementation_constraints/`
    - `10_semantic_requirements/`
    - `01_system_model/` through `09_validation/`
+   - `11_pipeline_schematics/` — stage sequencing and data flow (merger-produced)
    - Decoder freedom for anything unspecified
 
 2. Implement the decoded system in `decoded/<target>/`
 
 3. Copy all runtime data files from canonical into `decoded/<target>/` — the package must run without any reference to `semantic_ir/` at runtime
 
-4. After completing a decoding run, signal the orchestrator so the Regression Agent can validate
+4. After completing a decoding run, signal the orchestrator so the tester agent can validate
 
 ## Post-decoding validation
 
-The Regression Agent (not you) validates decoded output. It:
+The tester agent (not you) validates decoded output. It:
 - Reads reference data from `regression_tests/`
 - Runs your decoded implementation
 - Writes results to `decoded/<target>/regression_tests/`

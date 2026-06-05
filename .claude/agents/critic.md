@@ -31,13 +31,13 @@ Find code artifacts leaking into semantic IR body text.
 
 **Failing examples:**
 - "The solver is implemented in `SolverManager`."
-- "Variable `nrep` counts the retained basis functions."
-- "Subroutine `tapsrd` computes the spectator coordinates."
+- "Variable `nret` counts the retained modes."
+- "Subroutine `tcoord` computes the transformed coordinates."
 
 **Passing examples:**
 - "The solver performs Newton iterations."
-- "The number of retained basis functions is 52."
-- "The spectator coordinate is the distance from the third atom to the midpoint of the bonded pair."
+- "The number of retained modes is 52."
+- "The transformed coordinate is the distance from the reference point to the midpoint of a chosen pair."
 
 Code names are permitted **only** in `source:` metadata fields. Write findings to `semantic_ir/chunk_NNN/99_review/code_artifact_leakage.md`.
 
@@ -51,8 +51,8 @@ For each encoded unit, verify:
 - All coordinate conventions are defined
 - All units are specified
 - All assumptions are stated
-- The gradient sign convention is documented
-- Any behavioral hazards (as-built deviations from physics) are documented
+- Sign and orientation conventions for any directional quantity (gradients, fluxes, normals, etc.) are documented
+- Any behavioral hazards (as-built deviations from intended behavior) are documented
 
 Rate each unit: **READY** / **PARTIAL** / **BLOCKED** and state the specific gap that prevents reconstruction.
 
@@ -68,7 +68,7 @@ Each review file uses this structure:
 ## Issues
 
 ### Issue 1
-**Location:** `03_equations/pes.md § Section 2`
+**Location:** `03_equations/governing_equations.md § Section 2`
 **Problem:** ...
 **Resolution:** ...
 **Status:** open | resolved
