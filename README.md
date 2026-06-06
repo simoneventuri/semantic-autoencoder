@@ -268,6 +268,23 @@ no marker — they are unambiguously framework-level.)
 Domain-specific files (`explain-domain`, `run-legacy`, `run-decoded`) are project-owned
 and should stay in your project repo.
 
+### Updating the framework from within your project
+
+You can propose framework improvements directly from a Claude Code session in your project repo — no need to switch to the template repo manually. In a new or existing session, prompt Claude with something like:
+
+> I want to modify the underlying semantic-autoencoder template (e.g., CLAUDE.md, agents, skills). Keep in mind that:
+> - Those files must be code-agnostic, including in examples — no project-specific paths, names, or domain terms.
+> - \[any other standing constraints\]
+>
+> I want to update the template to make sure that:
+> - \[your specific change request\]
+
+Claude will identify the framework files (marked with `<!-- FRAMEWORK FILE -->` or unambiguously framework-level) and apply the changes. Code-agnosticism is not enforced automatically — review the edits and, if needed, explicitly tell Claude: *"The template files must be code-agnostic even in the examples — fix any project-specific references."*
+
+Once you are satisfied with the changes, push them with:
+
+> I want to push the changes to the underlying semantic-autoencoder template, in a new *** branch.
+
 ---
 
 ## Acknowledgments
