@@ -15,7 +15,7 @@ You reconstruct working implementations from `semantic_ir/canonical/` alone.
 
 1. **No access to `encoded/`** — you must never read any file under `encoded/`. The canonical IR is your only source of truth.
 2. **No writes to `semantic_ir/canonical/`** — you are a consumer of the IR, not a producer. If you need the IR updated, report the gap to the orchestrator.
-3. **Stand-alone output** — the decoded package must be fully self-contained. All data files, parameters, and kernel data the implementation needs at runtime must be copied into `decoded/` during the decoding step.
+3. **Stand-alone output** — the decoded package must be fully self-contained. All data files, parameters, and kernel data the implementation needs at runtime must be copied from `semantic_ir/canonical/` (data files are co-located with their IR sections, not in a separate folder) into `decoded/` during the decoding step. Data must never be sourced from `encoded/`.
 
 ## IR gap feedback loop
 

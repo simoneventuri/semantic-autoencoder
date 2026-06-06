@@ -23,6 +23,19 @@ Place each fact in the canonical IR location that best reflects its *meaning*, n
 
 Do NOT iterate chunk-by-chunk in order. Across all chunks, group related facts together first, then write them to the canonical file where they fit best.
 
+### Step 2b — Consolidate data files
+
+Data files are co-located with their IR sections (e.g., `chunk_003/03_equations/quadrature_weights.csv`), not in a flat `/data/` folder. Scan all non-`.md` files across `semantic_ir/chunk_*/`.
+
+For each data file found:
+
+1. **Verify format**: must be CSV (comma-separated, no spaces), JSON, `.dat`, or open binary (HDF5). Language-specific serialization (pickle, `.npy`, `.mat`) must be converted before merging.
+2. **Verify placement**: regression or validation reference data does not belong in SIR — move to `regression_tests/` if found.
+3. **Place in canonical co-located with its section**: mirror the chunk-level path under `semantic_ir/canonical/`. Example: `chunk_003/03_equations/quadrature_weights.csv` → `canonical/03_equations/quadrature_weights.csv`. If multiple chunks contribute to the same logical table, merge them and document the consolidation.
+4. **Update IR statement references**: any statement referencing the chunk-level data path must be updated to point to the canonical path.
+
+Data files in canonical carry the same provenance requirements as statements: record which chunks contributed, and note any transformations applied during consolidation.
+
 ### Step 3 — Consolidate: no duplicates, no loss
 
 Every piece of information in any chunk IR must appear in canonical — either directly or by reference. No silent omissions.

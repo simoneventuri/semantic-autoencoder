@@ -68,9 +68,50 @@ Follow the notation style recorded in `semantic_ir/canonical/10_semantic_require
 - Never use bare Unicode math characters in body text
 - Variable names follow the chosen style (LaTeX subscript / underscore / PascalCase)
 
+## Data file extraction
+
+Some legacy data must be preserved verbatim (lookup tables, fit coefficients, potential energy values, etc.). Apply this decision rule:
+
+- **Use a data file** when: the data is tabular or structured, has more than ~10 values, or is consumed directly at runtime (not derived from equations).
+- **Use inline markdown** when: the data is a small set of scalar parameters or constants that read naturally as statements.
+
+When extracting to a data file:
+- Place the file **co-located with the IR section it belongs to**, using a descriptive name. Example: a lookup table used in the equations section goes to `chunk_XXX/03_equations/quadrature_weights.csv`. Do not use a separate flat `/data/` folder.
+- Format preference: **CSV (comma-separated, no spaces) → JSON → `.dat` → open binary (e.g., HDF5)**. Use plain text unless it is genuinely impractical (e.g., large multi-dimensional arrays). Never use language-specific serialization (pickle, `.npy`, `.mat`, etc.).
+- Include one or more header rows describing columns, units, and provenance. Multiple header rows are fine when needed for clarity.
+- Add a statement in the relevant IR section referencing the data file by relative path and describing its role.
+
+**Never write regression or validation reference data to SIR** — that belongs in `regression_tests/` and is the tester agent's responsibility.
+
+## Information density
+
+The IR is a lossy compression of the legacy system. Lossy in the right direction.
+
+**Why asymmetry matters:**
+- Over-encoding (too much): excess facts are invisible to automated checks; only a critic can catch them, and many slip through. They pollute the IR permanently.
+- Under-encoding (too little): decoding fails visibly → encoder iteration → clean fix.
+
+Apply the three-tier test to every candidate fact:
+
+**Tier 1 — Full semantic statement** (necessity test passes: *"Would a decoder fail without this?"*)
+Include as a regular statement with full `source/confidence/status` metadata.
+
+**Tier 2 — Comment annotation** (necessity test fails, but documentary value exists: intent, design rationale, domain observations)
+Record as an annotation clearly marked as originating from the legacy source:
+```markdown
+<!-- legacy-note: <fact or observation from the legacy code> -->
+```
+This preserves intent for documentation and future maintainers without polluting the semantic layer. The SIR may outlive multiple decoder generations.
+
+**Tier 3 — Drop entirely**
+- Purely language-specific implementation details (e.g., "done this way because FORTRAN lacks dynamic allocation") — these carry no semantic content for a language-agnostic decoder
+- Intermediate derivation steps implied by an already-stated equation
+- Compiler-level or runtime details with no semantic consequence
+- Facts transitively redundant with already-stated facts
+
 ## Filesystem ownership
 
-**May write:** `semantic_ir/chunk_XXX/`
+**May write:** `semantic_ir/chunk_XXX/` (data files co-located with their IR section, e.g., `chunk_XXX/03_equations/quadrature_weights.csv`)
 **May use:** `workspaces/chunk_XXX/` for temporary reasoning
 **Must NOT write:** `semantic_ir/canonical/`
 **Must NOT write:** `encoded/legacy/`

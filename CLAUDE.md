@@ -31,8 +31,10 @@ without ever reading the original source code.
 5. All mathematics in IR files uses `$...$` or `$$...$$`. No bare Unicode math.
 6. All IR statements carry `source:`, `confidence:`, and `status:` metadata.
 7. Code names (variable names, function names, class names) appear only in `source:` fields — never in IR body text.
-8. Decoded packages must be self-contained: all runtime data files copied into `decoded/` during decoding.
+8. Decoded packages must be self-contained: all runtime data files copied from `semantic_ir/canonical/` into `decoded/` during decoding. Data must never flow directly from `encoded/` to `decoded/`.
 9. Do not modify shell profile files (`~/.zshrc`, `~/.zprofile`, etc.). Use `.claude/<project>_env.sh` for env setup.
+10. `semantic_ir/canonical/` is the sole source of truth for runtime data. Encoders extract data from `encoded/` and write it co-located with the IR section it belongs to (e.g., `canonical/03_equations/reaction_rates.csv`); decoders copy from there.
+11. Runtime data files in SIR use universal, language-agnostic formats. Preference order: **CSV (comma-separated, no spaces) → JSON → `.dat` → open binary (e.g., HDF5)**. Plain text is strongly preferred; open binary formats are acceptable when text is impractical (e.g., large multi-dimensional arrays). Never use language-specific serialization (pickle, `.npy`, `.mat`, etc.). Never store regression or validation reference data in SIR — that belongs in `regression_tests/`.
 
 ---
 
@@ -109,6 +111,15 @@ validation behavior · required integrations
 
 **Do NOT preserve by default:** file names · folder layout · module structure ·
 class hierarchy · function names · serialization formats · implementation style
+
+**Information density:** prefer under-encoding over over-encoding. Over-encoding
+silently inflates the IR with facts that are hard to identify and remove; under-encoding
+causes detectable decoding failures that trigger a clean encoder iteration. Apply a
+three-tier test to every candidate fact: (1) necessary for reconstruction → full
+semantic statement; (2) not required but has documentary value (intent, design
+rationale, domain context from the legacy source) → comment annotation, clearly marked
+as originating from the legacy code; (3) purely redundant or language-specific
+implementation detail → drop.
 
 ---
 

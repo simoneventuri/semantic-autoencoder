@@ -41,7 +41,33 @@ Find code artifacts leaking into semantic IR body text.
 
 Code names are permitted **only** in `source:` metadata fields. Write findings to `semantic_ir/chunk_NNN/99_review/code_artifact_leakage.md`.
 
-## Check 3 — Decoder Readiness Critic
+## Check 3 — Density Critic
+
+Over-encoding is the harder failure mode: excess facts are not caught by failing tests and can only be removed by human review. Flag aggressively.
+
+Apply the necessity test to every statement and every data file: *"Would a decoder fail to reconstruct the system without this?"*
+
+For each statement apply the three-tier test:
+
+**Should be Tier 1 (full statement) but fails necessity → flag for demotion or removal:**
+- Implementation commentary with no semantic content (how the original code was organized)
+- Intermediate derivation steps implied by an already-stated equation
+- Purely language-specific details (e.g., "done this way because FORTRAN lacks X") — zero content for a language-agnostic decoder; drop entirely, not even a comment
+- Facts transitively redundant with already-stated facts
+- Data values computable from equations already in the IR
+
+**Should be Tier 2 (comment annotation) but missing provenance → flag:**
+- Annotations that don't clearly state they originate from the legacy source (must use `<!-- legacy-note: ... -->` form)
+
+**Data file issues — flag:**
+- Language-specific serialization format (pickle, `.npy`, `.mat`) — must be converted to CSV/JSON/dat/HDF5
+- Regression or validation reference data stored in SIR (must be in `regression_tests/`)
+- Data file with no header row, no units, or no IR statement referencing it
+- Data file placed in a flat `/data/` folder rather than co-located with its IR section
+
+Write findings to `semantic_ir/chunk_NNN/99_review/density.md`. For each flagged item: location, tier it was assigned, why it is wrong, and recommended action (drop / demote to `<!-- legacy-note -->` / move to `regression_tests/` / fix format).
+
+## Check 4 — Decoder Readiness Critic
 
 Test the question: "Can a decoder reconstruct this system without reading the original source code?"
 
