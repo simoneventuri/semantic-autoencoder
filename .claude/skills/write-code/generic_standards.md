@@ -4,7 +4,7 @@
 
 ## Naming
 
-- Use descriptive, self-explanatory names. In scientific code prefer `velocity_field`, `temperature_solution` over `u`, `T`.
+- Use descriptive, self-explanatory names. In scientific code prefer `pressure_field` over `P`.
 - Reserve single-letter names for simple loop indices only.
 
 ## Documentation
