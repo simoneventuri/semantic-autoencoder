@@ -27,6 +27,10 @@ When the canonical IR is incomplete, ambiguous, or incorrect:
 
 Do not invent values that aren't in the IR. Do not modify IR files to fill gaps yourself.
 
+## Coding standards
+
+Before writing any implementation file, invoke the **`write-code`** skill. It will direct you to load `generic_standards.md` and the appropriate language-specific standards file (e.g., `python_standards.md`). Apply every rule to all code you produce.
+
 ## Decoding process
 
 1. Read `semantic_ir/canonical/` in this priority order:

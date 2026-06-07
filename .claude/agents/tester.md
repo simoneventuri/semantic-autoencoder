@@ -25,12 +25,49 @@ Run after encoding a computable quantity. You:
 
 ### Mode B — Decoded output validation (post-decoding)
 
-Run after a decoder agent produces output. You:
+Run after a decoder agent produces output. For Python targets, use the pytest workflow below. Adapt the structure for other languages while preserving the same separation of concerns.
 
-1. Read reference data from `regression_tests/`
-2. Run the decoded implementation against the reference inputs
-3. Write all comparison results to `decoded/<target>/regression_tests/`
-4. **Never write to the top-level `regression_tests/` directory** — that is the reference data store
+#### Step 1 — Create the test suite inside the decoded package
+
+Write a pytest-compatible test suite at `decoded/<target>/tests/`:
+
+```
+decoded/<target>/
+  tests/
+    conftest.py                     # shared fixtures and tolerance constants
+    test_regression_<UnitName>.py   # one file per validated unit
+```
+
+**`conftest.py`** must:
+- Define a fixture that locates and loads reference data from `regression_tests/<UnitName>/` (path relative to project root, resolved with `pathlib.Path`)
+- Expose tolerance constants matching the defaults in this agent (or tighter if the IR specifies them)
+- Set up and tear down a temporary workspace at `decoded/<target>/.test_tmp/` — create it before the session, delete it completely after
+
+**`test_regression_<UnitName>.py`** must:
+- Import the decoded implementation (not the legacy binary)
+- Load reference inputs and expected outputs via the `conftest.py` fixture
+- Use `pytest.mark.parametrize` to cover all reference input cases
+- Assert numerical agreement within tolerances using absolute and relative checks
+- Write intermediate artifacts (if any) to `.test_tmp/` only — never to `regression_tests/` or `decoded/<target>/` root
+
+#### Step 2 — Run pytest and capture results
+
+```bash
+pytest decoded/<target>/tests/ -v --tb=short 2>&1 | tee decoded/<target>/regression_tests/pytest_report.txt
+```
+
+#### Step 3 — Write comparison summary
+
+Write `decoded/<target>/regression_tests/summary.md` with:
+- Pass / fail count per unit
+- Max relative error observed per unit
+- Any units that exceeded tolerance (with the specific input case)
+
+#### Step 4 — Clean the temporary workspace
+
+Delete `decoded/<target>/.test_tmp/` after the run, whether the tests pass or fail.
+
+**Never write to the top-level `regression_tests/` directory in Mode B** — that is the reference data store.
 
 ## Reference data format (Mode A)
 
@@ -64,9 +101,11 @@ Cluster points near features of interest rather than uniform spacing.
 ## Filesystem ownership
 
 **May write:**
-- `regression_tests/<UnitName>/` — reference data (Mode A)
-- `semantic_ir/chunk_NNN/` — regression_tests.md updates
-- `decoded/<target>/regression_tests/` — validation output (Mode B)
+- `regression_tests/<UnitName>/` — reference data and drivers (Mode A)
+- `semantic_ir/chunk_NNN/` — regression_tests.md updates (Mode A)
+- `decoded/<target>/tests/` — pytest test suite (Mode B)
+- `decoded/<target>/.test_tmp/` — temporary workspace, cleaned after run (Mode B)
+- `decoded/<target>/regression_tests/` — pytest report and summary (Mode B)
 
 **Must NOT write:** `encoded/legacy/`
 **Must NOT write:** top-level `regression_tests/` in Mode B
