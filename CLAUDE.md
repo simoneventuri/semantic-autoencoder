@@ -35,6 +35,8 @@ without ever reading the original source code.
 9. Do not modify shell profile files (`~/.zshrc`, `~/.zprofile`, etc.). Use `.claude/<project>_env.sh` for env setup.
 10. `semantic_ir/canonical/` is the sole source of truth for runtime data. Encoders extract data from `encoded/` and write it co-located with the IR section it belongs to (e.g., `canonical/03_equations/reaction_rates.csv`); decoders copy from there.
 11. Runtime data files in SIR use universal, language-agnostic formats. Preference order: **CSV (comma-separated, no spaces) → JSON → `.dat` → open binary (e.g., HDF5)**. Plain text is strongly preferred; open binary formats are acceptable when text is impractical (e.g., large multi-dimensional arrays). Never use language-specific serialization (pickle, `.npy`, `.mat`, etc.). Never store regression or validation reference data in SIR — that belongs in `regression_tests/`.
+12. **SOT precedence over lessons (non-negotiable).** Each agent/skill is governed by its framework `.md`/`SKILL.md` (the SOT). An agent may also load a subordinate `.claude/lessons/<name>.lessons.md`. The SOT has **full precedence**: a lesson that contradicts, weakens, or reinterprets it is ignored and marked `status: stale`. Lessons may only add guidance the SOT leaves open. User instructions outrank both.
+13. **Lessons capture is curated, not self-edited.** Agents append *raw* candidates to `artifacts/lessons_inbox/<name>.md` on an evidence trigger (user feedback, critic finding, gap re-encode, regression failure). Only the `lessons-curator` agent writes vetted entries into `.claude/lessons/`. Promotion of `general` lessons into the template is manual, via `/harvest-lessons`.
 
 ---
 
@@ -77,7 +79,7 @@ semantic_ir/      — Extracted knowledge (primary product)
   chunk_NNN/      — Per-chunk extraction artifacts
 decoded/          — Decoder outputs (self-contained packages)
 regression_tests/ — Numerical reference data from original binary
-artifacts/        — Evidence and planning (not semantic knowledge)
+artifacts/        — Evidence and planning (not semantic knowledge); includes lessons_inbox/ (disposable raw lesson candidates)
 workspaces/       — Temporary reasoning; disposable
 logs/             — Execution history
 config/           — Project configuration
@@ -88,6 +90,7 @@ docs/             — Human-readable project documentation
   rules/          — Path-scoped instruction files (loaded when Claude reads matching files)
   skills/         — On-demand workflows: /setup, /orchestrate, /draw-workflow
                     + project-created: /explain-domain, /run-legacy, /run-decoded
+  lessons/        — Per-agent accumulated lessons (subordinate to the SOT .md files)
 ```
 
 ### Domain-specific skills (created per project, not in the skeleton)
