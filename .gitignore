@@ -26,3 +26,8 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# Disposable raw lesson candidates (curated output lives in .claude/lessons/)
+!artifacts/lessons_inbox/
+artifacts/lessons_inbox/*
+!artifacts/lessons_inbox/.gitkeep

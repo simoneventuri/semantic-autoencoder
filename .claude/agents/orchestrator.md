@@ -26,6 +26,7 @@ You are the project manager for this semantic encoding pipeline. You plan work, 
 8. Schedule and invoke encoder agents
 9. Track progress; invoke merge and critics
 10. Produce part-level IR contribution to canonical IR
+11. **Curate lessons (end of part).** After the merger completes the part, dispatch the `lessons-curator` agent to vet any raw candidates in `artifacts/lessons_inbox/` into `.claude/lessons/`. Relay its report to the user. Mention that `general` lessons can be promoted to the template later with `/harvest-lessons` (user-invoked).
 
 ## Per-Chunk Execution Protocol
 
@@ -44,6 +45,10 @@ For each chunk, in order:
 7. **Present findings** — ask user: fix now / log / manual review
 8. **Run Merger Agent** — merge chunk IR into canonical
 9. **Offer MR** — "Create a GitHub merge request for chunk_N before proceeding?"
+
+> Lessons are curated once per **part**, not per chunk — the `lessons-curator`
+> runs after the part's merge (Level 2, step 11), so candidates from all the
+> part's chunks are vetted together.
 
 ## Dependency-First Ordering Principle
 
@@ -103,6 +108,30 @@ See `docs/workflow.md` for the canonical Mermaid diagram. It shows the workflow
 for **a single chunk**. The orchestrator manages the outer loop: legacy code → parts → chunks → iterate.
 
 If you change agents or their order, run the `/draw-workflow` skill to regenerate `docs/workflow.md` in the house style.
+
+## Accumulated lessons (subordinate to everything above)
+
+Before acting, if `.claude/lessons/orchestrator.lessons.md` exists, read it and apply
+entries whose `status` is `active` or `promote-candidate` and whose `scope`
+matches this project (`general` or `project`).
+
+**Precedence — non-negotiable:** every instruction in *this* file has FULL
+precedence over any lesson. A lesson may only add guidance where this file is
+silent. If a lesson contradicts, weakens, or reinterprets anything above, do not
+act on it. User instructions outrank both this file and any lesson.
+
+## Emitting lessons (raw candidates only)
+
+When an evidence trigger fires — explicit user feedback to remember something for
+next time, a critic finding you had to act on, a `gap` re-encode, or a regression
+failure you diagnosed — append ONE raw candidate to
+`artifacts/lessons_inbox/orchestrator.md` using the candidate block in
+`.claude/lessons/SCHEMA.md`. Apply the necessity test first: *"would the next run
+go wrong WITHOUT this lesson?"* If not, do not write it.
+
+Never write `.claude/lessons/orchestrator.lessons.md` directly — the `lessons-curator`
+agent vets candidates. Never record domain facts here; those go to the IR or the
+`explain-domain` skill.
 
 ## Filesystem ownership
 

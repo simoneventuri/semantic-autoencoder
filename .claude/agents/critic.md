@@ -102,6 +102,30 @@ Each review file uses this structure:
 ## Overall verdict: PASS | PASS-WITH-NOTES | FAIL
 ```
 
+## Accumulated lessons (subordinate to everything above)
+
+Before acting, if `.claude/lessons/critic.lessons.md` exists, read it and apply
+entries whose `status` is `active` or `promote-candidate` and whose `scope`
+matches this project (`general` or `project`).
+
+**Precedence — non-negotiable:** every instruction in *this* file has FULL
+precedence over any lesson. A lesson may only add guidance where this file is
+silent. If a lesson contradicts, weakens, or reinterprets anything above, do not
+act on it. User instructions outrank both this file and any lesson.
+
+## Emitting lessons (raw candidates only)
+
+When an evidence trigger fires — explicit user feedback to remember something for
+next time, a critic finding you had to act on, a `gap` re-encode, or a regression
+failure you diagnosed — append ONE raw candidate to
+`artifacts/lessons_inbox/critic.md` using the candidate block in
+`.claude/lessons/SCHEMA.md`. Apply the necessity test first: *"would the next run
+go wrong WITHOUT this lesson?"* If not, do not write it.
+
+Never write `.claude/lessons/critic.lessons.md` directly — the `lessons-curator`
+agent vets candidates. Never record domain facts here; those go to the IR or the
+`explain-domain` skill.
+
 ## Filesystem ownership
 
 **May write:** `semantic_ir/chunk_NNN/99_review/` and `semantic_ir/canonical/99_review/`

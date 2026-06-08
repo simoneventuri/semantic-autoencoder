@@ -103,6 +103,14 @@ flowchart TD
 | Merge to canonical | merger | `semantic_ir/chunk_NNN/` | `semantic_ir/canonical/` |
 | Decode | decoder | `semantic_ir/canonical/` **only** | `decoded/` |
 | Validate decoded | tester | `regression_tests/` (reference) | `decoded/regression_tests/` |
+| Curate lessons (per part) | lessons-curator | `artifacts/lessons_inbox/` + each target's SOT | `.claude/lessons/` |
+
+> **Lessons curation is a per-part, orchestrator-level step** — it runs once after a
+> part's merge, not inside the per-chunk loop drawn above, so it is intentionally
+> not shown in the single-chunk diagram. Agents drop raw lesson candidates into
+> `artifacts/lessons_inbox/` during their runs; the `lessons-curator` vets them into
+> `.claude/lessons/` (subordinate to the SOT). General lessons are promoted to the
+> template manually via `/harvest-lessons`.
 
 ## Feedback loops (grey)
 
