@@ -36,6 +36,29 @@ For each data file found:
 
 Data files in canonical carry the same provenance requirements as statements: record which chunks contributed, and note any transformations applied during consolidation.
 
+### Step 2c — Reconcile the units registry
+
+You own the canonical units registry: `canonical/02_quantities/units.md` (default unit
+per dimension) and `canonical/02_quantities/unit_registry.csv`
+(`symbol,aliases,dimension,is_default,to_default_formula`). Encoders append rows; you
+make them consistent and authoritative:
+
+1. **One default per dimension.** Exactly one row per dimension has `is_default=true`.
+   Set defaults per the policy in `config/project_config.yaml` (`units.default_policy`):
+   `adopt-legacy` → the unit the legacy code predominantly uses for that dimension;
+   `user-specified` → the user's pinned unit. Apply any `default_overrides`.
+2. **Merge duplicates.** Collapse rows that are the same unit under different spellings
+   into one `symbol` with the others moved to `aliases`. Keep symbols as short as the
+   standard allows.
+3. **Verify conversions.** Each non-default unit's `to_default_formula` must map a value
+   in that unit to the default; the default unit's own formula is the identity (`x`).
+4. **Enforce expression in defaults.** Any canonical statement or data file still
+   expressing a quantity in a non-default unit must be converted (or carry an explicit,
+   justified exception). If an encoder flagged a default conflict with `gap:`, resolve
+   it here and freeze the choice.
+5. Record provenance and freeze: once frozen, later parts reuse these defaults rather
+   than re-deciding.
+
 ### Step 3 — Consolidate: no duplicates, no loss
 
 Every piece of information in any chunk IR must appear in canonical — either directly or by reference. No silent omissions.
@@ -74,6 +97,10 @@ After writing canonical IR, review your own output. Verify:
 - **Correct placement:** facts in semantically appropriate canonical sections
 - **Leakage:** no code-artifact names in body text
 - **Schematic coverage:** schematic accounts for all major stages in the chunks
+- **Units:** exactly one default per dimension; every unit used in body or data has a
+  registry row with a valid `to_default_formula`; every quantity is expressed in its
+  dimension's default unit (or carries a justified exception); symbols are as short as
+  the standard allows
 
 Write review to `semantic_ir/canonical/99_review/merge_review.md`.
 

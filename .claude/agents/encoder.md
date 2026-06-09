@@ -68,6 +68,30 @@ Follow the notation style recorded in `semantic_ir/canonical/10_semantic_require
 - Never use bare Unicode math characters in body text
 - Variable names follow the chosen style (LaTeX subscript / underscore / PascalCase)
 
+## Units
+
+There is one canonical units registry, created at `/setup`:
+- `canonical/02_quantities/units.md` — the default unit per physical dimension (the
+  merger owns this; one default per dimension).
+- `canonical/02_quantities/unit_registry.csv` — every unit, with its conversion to
+  that dimension's default. Columns:
+  `symbol,aliases,dimension,is_default,to_default_formula` (`x` = input value).
+
+Read both before encoding any quantity, then:
+
+- **Express every quantity in its dimension's default unit** in IR body and data. If
+  the legacy code uses a different unit at a site, convert to the default and note the
+  original unit only as a Tier-2 legacy-note when it carries intent.
+- **Name units by the shortest standard symbol** (a spelled-out unit → its standard
+  one- or two-character symbol). Long spellings go in the `aliases` column, not the body.
+- **Register before you use.** Any unit you encounter that is not yet a row in
+  `unit_registry.csv` must be appended there with its `to_default_formula` (and its
+  dimension's default set, if this is the first unit of that dimension and no default
+  was pinned at setup). Never introduce a unit without a registry row.
+- Do not invent a parallel conversion in prose — reference the registry. If two sites
+  disagree on a dimension's default, do not pick one silently; flag it with `gap:` for
+  the merger to reconcile and freeze.
+
 ## Data file extraction
 
 Some legacy data must be preserved verbatim (lookup tables, fit coefficients, potential energy values, etc.). Apply this decision rule:

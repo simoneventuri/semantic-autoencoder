@@ -38,6 +38,16 @@ models:
 notation:
   style_file: semantic_ir/canonical/10_semantic_requirements/notation_style.md
 
+units:
+  registry_file: semantic_ir/canonical/02_quantities/units.md   # human-readable defaults + narrative
+  registry_data: semantic_ir/canonical/02_quantities/unit_registry.csv  # machine-readable unit table
+  default_policy: adopt-legacy   # adopt-legacy (default per dimension = legacy's prevailing unit) | user-specified
+  default_overrides: {}          # optional: {dimension: unit} pairs the user pins, overriding adopt-legacy
+
+decoder:
+  default_language: python       # confirmed at /setup; target language for the default decoded package
+  package_root: decoded          # decoded packages live under here (one package, grown across IR parts)
+
 session_started: YYYY-MM-DD
 
 # ---------------------------------------------------------------------------
@@ -67,4 +77,39 @@ session_started: YYYY-MM-DD
 #
 # ## LaTeX Rule (always enforced)
 # All mathematical expressions in $...$ (inline) or $$...$$ (display).
+# ---------------------------------------------------------------------------
+#
+# ---------------------------------------------------------------------------
+# Units Registry Template
+# ---------------------------------------------------------------------------
+# /setup creates the two files referenced under `units:` as skeletons. The
+# merger owns them thereafter: encoders add rows; the merger freezes one default
+# per dimension. Keep unit symbols as short as the standard allows.
+#
+# units.md (human-readable) holds the default-unit table + narrative:
+# ---
+# # Units — [Project Name]
+# # Default unit per dimension. Binding for all IR files. Owned by the merger.
+# | dimension | default unit (symbol) | notes |
+# |-----------|-----------------------|-------|
+# | length    | [symbol]              | adopted from legacy / user-pinned |
+# | time      | [symbol]              | ... |
+# | energy    | [symbol]              | ... |
+# (one row per physical dimension the project uses)
+# ---
+#
+# unit_registry.csv (machine-readable) — every unit encountered, with its
+# conversion TO that dimension's default. One row per unit. No spaces.
+# Columns:
+#   symbol,aliases,dimension,is_default,to_default_formula
+# where:
+#   symbol             short canonical symbol used in IR/data
+#   aliases            '|'-separated long forms / spellings seen in the legacy code
+#   dimension          the physical dimension (matches units.md)
+#   is_default         true for the dimension's default unit, false otherwise
+#   to_default_formula expression mapping a value in this unit to the default,
+#                      using `x` as the input value (e.g. x*0.1, x*1000, (x-273.15))
+# Example rows (generic; replace with project units):
+#   m,metre|meter,length,true,x
+#   cm,centimetre,length,false,x*0.01
 # ---------------------------------------------------------------------------

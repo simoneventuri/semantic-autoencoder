@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Run once at project start to interview the user and generate config/project_config.yaml. Covers: permissions, legacy code location, user profile, autonomy level, encoder parallelism, supplementary references, notation style, and model assignments.
+description: Run once at project start to interview the user and generate config/project_config.yaml. Covers: permissions, legacy code location, user profile, autonomy level, encoder parallelism, supplementary references, notation style, units registry and default-unit policy, decoder target language, and model assignments.
 disable-model-invocation: true
 ---
 
@@ -127,6 +127,37 @@ After the user chooses, create `semantic_ir/canonical/10_semantic_requirements/n
 
 ---
 
+## Step 0.7b — Units registry and default policy
+
+Explain briefly:
+> "I keep all units in one place. Every physical dimension gets a single default
+> unit; the IR expresses quantities in that default and names units by their
+> shortest standard symbol. Every other unit is recorded once, with its conversion
+> to the default, in a project-wide units registry."
+
+Ask:
+> "How should I pick each dimension's default unit?
+> 1. **Adopt the legacy code's prevailing unit** (default) — whatever the original
+>    code mostly works in becomes the default; I discover this while encoding and
+>    the merger freezes it. Fewest conversions, preserves the as-built numerics.
+> 2. **You specify** — pin a unit (or a whole system) for some or all dimensions now,
+>    and I convert everything to it.
+> Either way you can pin individual overrides."
+
+Record under `units:` (`default_policy: adopt-legacy | user-specified`, plus any
+`default_overrides`).
+
+Then create the registry **skeletons** from the Units Registry Template in
+`config/project_config.example.yaml`:
+- `semantic_ir/canonical/02_quantities/units.md` — the default-unit-per-dimension
+  table (left as placeholders to be filled as quantities are encoded, unless the
+  user pinned defaults now) plus a one-line statement of the chosen policy.
+- `semantic_ir/canonical/02_quantities/unit_registry.csv` — header row only
+  (`symbol,aliases,dimension,is_default,to_default_formula`).
+The merger owns these files thereafter; encoders append to them.
+
+---
+
 ## Step 0.8 — Encoder parallelism
 
 Ask:
@@ -148,6 +179,22 @@ Present:
 > Should I use these defaults, or would you like to change either?"
 
 Record under `models:`.
+
+---
+
+## Step 0.9b — Decoder default language
+
+Ask:
+> "What language should the default decoded package target? This is the language
+> the decoder writes the reference implementation in (the one validated against
+> regression data). Default: **Python**."
+
+Note for the user: there is **one** decoded package, written to a high standard in
+that language and structured modularly so future IR parts extend it without
+disturbing what already works.
+
+Record under `decoder:` (`default_language`, default `python`; `package_root`,
+default `decoded`).
 
 ---
 
@@ -325,6 +372,16 @@ models:
 
 notation:
   style_file: semantic_ir/canonical/10_semantic_requirements/notation_style.md
+
+units:
+  registry_file: semantic_ir/canonical/02_quantities/units.md
+  registry_data: semantic_ir/canonical/02_quantities/unit_registry.csv
+  default_policy: adopt-legacy | user-specified
+  default_overrides: {}        # optional {dimension: unit} pins
+
+decoder:
+  default_language: python     # confirmed in Step 0.9b
+  package_root: decoded
 
 session_started: <DATE>
 ```

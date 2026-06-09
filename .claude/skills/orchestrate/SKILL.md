@@ -123,28 +123,40 @@ After all chunks in a part complete:
 
 The Decoder Agent is never invoked automatically. On user request:
 
-1. **Verify `run-decoded` skill exists** — check `.claude/skills/run-decoded/SKILL.md`.
-   If missing, create it now (see template below) before dispatching the decoder.
+1. **Read decoder config** — from `config/project_config.yaml`, note `decoder.default_language`
+   (the target language, set at `/setup`) and `decoder.package_root` (the single package's
+   location). Pass both to the decoder; there is one package, grown across IR parts — never
+   spin up a second package or change language without the user.
+2. **Verify `run-decoded` skill exists** — check `.claude/skills/run-decoded/SKILL.md`.
+   If missing, create it now (see template below) before dispatching the decoder, filling in
+   the install/run commands for `decoder.default_language`.
    This skill must exist so the tester agent and the user know how to run the decoded package.
-2. Dispatch the `decoder` subagent with access to `semantic_ir/canonical/` only
-3. After decoding: dispatch `tester` subagent in Mode B to validate
-4. If validation fails: report the specific gap, dispatch encoder to patch IR, re-invoke decoder
+3. Dispatch the `decoder` subagent with access to `semantic_ir/canonical/` only
+4. After decoding: dispatch `tester` subagent in Mode B to validate
+5. If validation fails: report the specific gap, dispatch encoder to patch IR, re-invoke decoder
+
+**Re-decoding after the IR grows.** When a new part has been merged and the user asks to
+decode again, instruct the decoder to **extend** the existing package — add modules for the
+new part through existing interfaces — not to regenerate it from scratch. Already-decoded,
+already-validated modules and their passing regression tests must remain intact; flag any
+required restructuring of existing modules as an IR-driven exception, not routine.
 
 ### run-decoded skill template
 
 If `.claude/skills/run-decoded/SKILL.md` does not exist, create it with this structure,
-filling in the actual install and run commands for the decoded package:
+filling in the actual install and run commands for the decoded package in the configured
+`decoder.default_language` (`<LANG>` below) under `decoder.package_root` (`<PACKAGE_ROOT>`):
 
 ```markdown
 ---
 name: run-decoded
-description: Install and run the decoded <TARGET> package. Use when testing the decoded implementation or validating against regression reference data.
+description: Install and run the decoded package. Use when testing the decoded implementation or validating against regression reference data.
 disable-model-invocation: true
 ---
 
 # Decoded Package Runner
 
-**`encoded/` and `semantic_ir/canonical/` are read-only. Only `decoded/` and `workspaces/` are writable.**
+**`encoded/` and `semantic_ir/canonical/` are read-only. Only the decoded package and `workspaces/` are writable.**
 
 ## Step 1 — Establish project root
 
@@ -155,11 +167,12 @@ cd "$PROJECT_ROOT"
 
 ## Step 2 — Install the package
 
-TODO: Add install command (e.g. `pip install -e decoded/<target>` or `cargo build`).
+TODO: Add the install/build command for <LANG> against <PACKAGE_ROOT>
+(e.g. the language's standard package install or build step).
 
 ## Step 3 — Run the test suite
 
-TODO: Add test command (e.g. `pytest decoded/<target>/tests/ -v`).
+TODO: Add the <LANG> test command.
 
 All tests must pass before claiming the decoded implementation is correct.
 
@@ -170,7 +183,7 @@ TODO: Add validation command that compares decoded output against `regression_te
 ## Step 5 — Clean up
 
 TODO: Remove any build artifacts, caches, or temporary files.
-Do not delete `decoded/` itself.
+Do not delete the decoded package itself.
 ```
 
 ---
