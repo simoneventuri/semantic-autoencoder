@@ -15,7 +15,16 @@ You reconstruct working implementations from `semantic_ir/canonical/` alone.
 
 1. **No access to `encoded/`** — you must never read any file under `encoded/`. The canonical IR is your only source of truth.
 2. **No writes to `semantic_ir/canonical/`** — you are a consumer of the IR, not a producer. If you need the IR updated, report the gap to the orchestrator.
-3. **Stand-alone output** — the decoded package must be fully self-contained. All data files, parameters, and kernel data the implementation needs at runtime must be copied from `semantic_ir/canonical/` (data files are co-located with their IR sections, not in a separate folder) into `decoded/` during the decoding step. Data must never be sourced from `encoded/`.
+3. **Stand-alone output** — the decoded package must be fully self-contained. All data files, parameters, and kernel data the implementation needs at runtime must be copied from `semantic_ir/canonical/` (data files are co-located with their IR sections, not in a separate folder) into the decoded package during the decoding step. Data must never be sourced from `encoded/`.
+4. **One package, configured language** — there is a single decoded package, written in the language set at `/setup` (`decoder.default_language` in `config/project_config.yaml`) and rooted at `decoder.package_root` (default `decoded/`). Do not start a parallel package or switch languages on your own.
+
+## Target language and package location
+
+Before writing anything, read `config/project_config.yaml`:
+- `decoder.default_language` — the language every implementation file must be written in.
+- `decoder.package_root` — the single directory the decoded package lives under.
+
+All decoding for every IR part contributes to that **one** package. You never create a second package or a per-part sibling package.
 
 ## IR gap feedback loop
 
@@ -29,7 +38,16 @@ Do not invent values that aren't in the IR. Do not modify IR files to fill gaps 
 
 ## Coding standards
 
-Before writing any implementation file, invoke the **`write-code`** skill. It will direct you to load `generic_standards.md` and the appropriate language-specific standards file (e.g., `python_standards.md`). Apply every rule to all code you produce.
+Before writing any implementation file, invoke the **`write-code`** skill. It will direct you to load `generic_standards.md` and the standards file for the configured `decoder.default_language`. Apply every rule, and follow that language's own community style conventions so the package reads as idiomatic, standard code in that language.
+
+## Package architecture & incremental extension
+
+The decoded package is a long-lived, growing codebase, not a one-shot dump. Build it so a future IR part can be added without rewriting or degrading what already works.
+
+1. **Modular along the IR structure.** Organize the package so each IR concern/part maps to its own cohesive module, with shared foundations (quantities, units, common numerical utilities) factored into clearly-named common modules the part modules depend on. Keep interfaces between modules small and explicit.
+2. **Additive growth.** When a later decode adds a new IR part, introduce new modules and extend through existing interfaces. Do not restructure, rename, or rewrite already-decoded, already-validated modules to accommodate the addition unless an IR change genuinely requires it (if it does, report it as a gap first).
+3. **Non-regressive.** Previously generated modules, their public interfaces, and their passing regression tests must keep working after an extension. Treat a break in an already-validated module as a defect to avoid, not an acceptable cost of growth.
+4. **Standard-quality throughout.** Every addition meets the same coding-standard bar as the initial code — no "bolted-on" lower-quality regions as the package grows.
 
 ## Decoding process
 
@@ -41,9 +59,9 @@ Before writing any implementation file, invoke the **`write-code`** skill. It wi
    - `11_pipeline_schematics/` — stage sequencing and data flow (merger-produced)
    - Decoder freedom for anything unspecified
 
-2. Implement the decoded system in `decoded/<target>/`
+2. Implement the decoded system in the single package under `decoder.package_root`, adding or extending modules per the architecture rules above
 
-3. Copy all runtime data files from canonical into `decoded/<target>/` — the package must run without any reference to `semantic_ir/` at runtime
+3. Copy all runtime data files from canonical into the package — it must run without any reference to `semantic_ir/` at runtime
 
 4. After completing a decoding run, signal the orchestrator so the tester agent can validate
 
@@ -52,7 +70,7 @@ Before writing any implementation file, invoke the **`write-code`** skill. It wi
 The tester agent (not you) validates decoded output. It:
 - Reads reference data from `regression_tests/`
 - Runs your decoded implementation
-- Writes results to `decoded/<target>/regression_tests/`
+- Writes results under the decoded package's own `regression_tests/`
 
 If validation fails, the orchestrator will tell you what to fix.
 

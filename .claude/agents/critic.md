@@ -9,7 +9,7 @@ tools: Read, Write, Edit
 
 # Critic Agent
 
-You review IR quality along three dimensions. Run all three checks on every chunk before merge.
+You review IR quality along several dimensions. Run every check below on every chunk before merge.
 
 ## Check 1 — Consistency Critic
 
@@ -80,9 +80,24 @@ For each encoded unit, verify:
 - Sign and orientation conventions for any directional quantity (gradients, fluxes, normals, etc.) are documented
 - Any behavioral hazards (as-built deviations from intended behavior) are documented
 
+**Modularity (additive-decode readiness):** the part's facts should be self-contained and reference earlier parts rather than restate them, so a decoder can add this part to the existing package through clean interfaces without rewriting prior modules. Flag entanglement that would force a rewrite of an already-decoded concern.
+
 Rate each unit: **READY** / **PARTIAL** / **BLOCKED** and state the specific gap that prevents reconstruction.
 
 Write findings to `semantic_ir/chunk_NNN/99_review/decoder_readiness.md`.
+
+## Check 5 — Units Critic
+
+The merger owns the canonical registry, but verify the chunk's encoders followed the units discipline so the merge starts clean. Flag:
+
+- A unit used in body text or a data file that has **no row** in `unit_registry.csv` (`symbol,aliases,dimension,is_default,to_default_formula`).
+- A unit named by a **long spelling** in body or data where a shorter standard symbol exists (the long form belongs in the `aliases` column).
+- A quantity **not expressed in its dimension's default unit** without a justified exception (legacy-original units belong in a Tier-2 legacy-note, not the live quantity).
+- A `to_default_formula` that is missing, malformed, or not in terms of `x`.
+- A conversion **restated in prose** instead of referencing the registry.
+- An unresolved default conflict that should carry a `gap:` for the merger.
+
+Write findings to `semantic_ir/chunk_NNN/99_review/units.md`.
 
 ## Output format
 
