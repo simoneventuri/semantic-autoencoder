@@ -30,14 +30,14 @@ Also re-examine `semantic_ir/chunk_{N-1}/99_review/` for previously flagged issu
 Find code artifacts leaking into semantic IR body text.
 
 **Failing examples:**
-- "The solver is implemented in `SolverManager`."
-- "Variable `nret` counts the retained modes."
-- "Subroutine `tcoord` computes the transformed coordinates."
+- "The encoder is built with `nn.TransformerEncoderLayer`."
+- "Variable `n_heads` sets the number of attention heads."
+- "`featurize_mol()` returns a 2048-bit vector."
 
 **Passing examples:**
-- "The solver performs Newton iterations."
-- "The number of retained modes is 52."
-- "The transformed coordinate is the distance from the reference point to the midpoint of a chosen pair."
+- "The encoder applies multi-head self-attention followed by a position-wise feed-forward sublayer, each with a residual connection and layer normalization."
+- "The attention block uses 8 heads."
+- "Each molecule is represented as a 2048-bit circular fingerprint of radius 2."
 
 Code names are permitted **only** in `source:` metadata fields. Write findings to `semantic_ir/chunk_NNN/99_review/code_artifact_leakage.md`.
 
@@ -52,7 +52,7 @@ For each statement apply the three-tier test:
 **Should be Tier 1 (full statement) but fails necessity → flag for demotion or removal:**
 - Implementation commentary with no semantic content (how the original code was organized)
 - Intermediate derivation steps implied by an already-stated equation
-- Purely language-specific details (e.g., "done this way because FORTRAN lacks X") — zero content for a language-agnostic decoder; drop entirely, not even a comment
+- Purely framework- or language-specific details (e.g., "done this way because the framework requires contiguous tensors") — zero content for a language-agnostic decoder; drop entirely, not even a comment
 - Facts transitively redundant with already-stated facts
 - Data values computable from equations already in the IR
 
@@ -60,10 +60,11 @@ For each statement apply the three-tier test:
 - Annotations that don't clearly state they originate from the legacy source (must use `<!-- legacy-note: ... -->` form)
 
 **Data file issues — flag:**
-- Language-specific serialization format (pickle, `.npy`, `.mat`) — must be converted to CSV/JSON/dat/HDF5
+- Framework-native serialization format (pickle, `.npy`, `.pt`, `.ckpt`, Keras `.h5`, or any framework-native format) — must be converted to CSV/JSON/dat/open-binary (HDF5)
+- Trained weights/embeddings stored outside SIR or in framework-native form — they are model data, belong **in** the SIR co-located with their model object's page as open binary (HDF5 / safetensors-style), and are **not** regression data
 - Regression or validation reference data stored in SIR (must be in `regression_tests/`)
-- Data file with no header row, no units, or no IR statement referencing it
-- Data file placed in a flat `/data/` folder rather than co-located with its IR section
+- Data file with no header row, no units (where dimensioned), or no IR statement referencing it
+- Data file placed in a flat `/data/` folder rather than co-located with its IR object page
 
 Write findings to `semantic_ir/chunk_NNN/99_review/density.md`. For each flagged item: location, tier it was assigned, why it is wrong, and recommended action (drop / demote to `<!-- legacy-note -->` / move to `regression_tests/` / fix format).
 
@@ -72,32 +73,37 @@ Write findings to `semantic_ir/chunk_NNN/99_review/density.md`. For each flagged
 Test the question: "Can a decoder reconstruct this system without reading the original source code?"
 
 For each encoded unit, verify:
-- All governing equations are stated explicitly
-- All parameters and their numerical values are present (or located)
-- All coordinate conventions are defined
-- All units are specified
+- All model objects' interfaces (input/output shapes and dtypes) are defined
+- All layers/blocks and their composition into modules and models are stated
+- All hyperparameters are present (or located)
+- Learned-parameter data is present or located, as language-agnostic weight data (not framework-native serialization)
+- The loss/objective is stated
+- Data splits and preprocessing/normalization are stated
+- Tensor/shape/normalization conventions are defined
+- The evaluation metric and protocol are stated
+- Any stochastic/seed/determinism behavior is documented
 - All assumptions are stated
-- Sign and orientation conventions for any directional quantity (gradients, fluxes, normals, etc.) are documented
 - Any behavioral hazards (as-built deviations from intended behavior) are documented
 
-**Modularity (additive-decode readiness):** the part's facts should be self-contained and reference earlier parts rather than restate them, so a decoder can add this part to the existing package through clean interfaces without rewriting prior modules. Flag entanglement that would force a rewrite of an already-decoded concern.
+**Modularity (additive-decode readiness):** the part's facts should be self-contained and reference earlier model modules rather than restate them, so a decoder can add this part to the existing package through clean interfaces without rewriting prior model modules. Flag entanglement that would force a rewrite of an already-decoded model module.
 
 Rate each unit: **READY** / **PARTIAL** / **BLOCKED** and state the specific gap that prevents reconstruction.
 
 Write findings to `semantic_ir/chunk_NNN/99_review/decoder_readiness.md`.
 
-## Check 5 — Units Critic
+## Check 5 — Conventions Critic
 
-The merger owns the canonical registry, but verify the chunk's encoders followed the units discipline so the merge starts clean. Flag:
+The merger owns the canonical registry and conventions, but verify the chunk's encoders followed the conventions discipline so the merge starts clean. Note: most ML tensors are **dimensionless** and must **not** be forced into the unit registry — only genuinely dimensioned physical quantities (target labels, descriptors, energies) belong there. Flag:
 
-- A unit used in body text or a data file that has **no row** in `unit_registry.csv` (`symbol,aliases,dimension,is_default,to_default_formula`).
+- A **dimensioned** physical quantity used in body text or a data file that has **no row** in `quantity_registry.csv` (`symbol,aliases,dimension,is_default,to_default_formula`).
+- A dimensioned quantity **not expressed in its dimension's default unit** without a justified exception (legacy-original units belong in a Tier-2 legacy-note, not the live quantity).
 - A unit named by a **long spelling** in body or data where a shorter standard symbol exists (the long form belongs in the `aliases` column).
-- A quantity **not expressed in its dimension's default unit** without a justified exception (legacy-original units belong in a Tier-2 legacy-note, not the live quantity).
+- A tensor/feature whose shape, dtype, or normalization convention is used but **not recorded** in `02_conventions/tensor_conventions.md`.
 - A `to_default_formula` that is missing, malformed, or not in terms of `x`.
 - A conversion **restated in prose** instead of referencing the registry.
 - An unresolved default conflict that should carry a `gap:` for the merger.
 
-Write findings to `semantic_ir/chunk_NNN/99_review/units.md`.
+Write findings to `semantic_ir/chunk_NNN/99_review/conventions.md`.
 
 ## Output format
 
@@ -109,7 +115,7 @@ Each review file uses this structure:
 ## Issues
 
 ### Issue 1
-**Location:** `03_equations/governing_equations.md § Section 2`
+**Location:** `model_objects/encoder.md § attention`
 **Problem:** ...
 **Resolution:** ...
 **Status:** open | resolved

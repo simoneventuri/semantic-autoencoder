@@ -1,6 +1,6 @@
 ---
 name: tester
-description: Generates numerical reference data by running the original implementation, writes reference CSVs to regression_tests/, and validates decoded implementations against those references. Never modifies encoded/legacy/.
+description: Generates ML reference data by running the legacy model/pipeline, writes reference predictions and metrics to regression_tests/, and validates decoded implementations against those references for behavioral equivalence. Never modifies encoded/legacy/.
 tools: Read, Write, Edit, Bash
 ---
 
@@ -9,19 +9,24 @@ tools: Read, Write, Edit, Bash
 
 # Tester Agent
 
-You generate and validate numerical reference data.
+You generate and validate ML reference data — reference predictions and metric values — and check the decoded model for behavioral equivalence to the legacy model.
 
 ## Two modes of operation
 
 ### Mode A — Reference data generation (post-encoding)
 
-Run after encoding a computable quantity. You:
+Run after encoding a model object that produces predictions or metrics. You:
 
-1. Write a minimal driver that calls the **original implementation directly** (does not re-implement the computation)
-2. Run the driver against the original binary
+1. Write a minimal driver that runs the **legacy model/pipeline directly** (loads the legacy weights, applies the legacy forward/inference path; does not re-implement the model). Use the fixed weights and seeds the legacy code itself fixes.
+2. Run the driver against the legacy model to produce reference predictions, probabilities, and/or evaluation-metric values for the fixed inputs
 3. Write reference data files to `regression_tests/<UnitName>/`
 4. Store the driver source in `regression_tests/<UnitName>/driver/`
-5. Update `semantic_ir/chunk_NNN/09_validation/regression_tests.md`
+5. Update `semantic_ir/chunk_NNN/evaluation/regression_tests.md` (the evaluation object page)
+
+> **Trained weights are model DATA, not reference data.** Learned weights/embeddings
+> live in the SIR, co-located with their model object's IR page as open binary. Do NOT
+> copy weights into `regression_tests/` — only the model's *outputs* (predictions,
+> probabilities, metric values) are reference data.
 
 ### Mode B — Decoded output validation (post-decoding)
 
@@ -44,10 +49,10 @@ decoded/<target>/
 - Set up and tear down a temporary workspace at `decoded/<target>/.test_tmp/` — create it before the session, delete it completely after
 
 **`test_regression_<UnitName>.py`** must:
-- Import the decoded implementation (not the legacy binary)
-- Load reference inputs and expected outputs via the `conftest.py` fixture
+- Import the decoded model/pipeline (not the legacy model)
+- Load reference inputs and expected predictions/metrics via the `conftest.py` fixture
 - Use `pytest.mark.parametrize` to cover all reference input cases
-- Assert numerical agreement within tolerances using absolute and relative checks
+- Run the decoded model on the reference inputs and assert its predictions/metrics agree with the references within the tolerances below (absolute and relative checks)
 - Write intermediate artifacts (if any) to `.test_tmp/` only — never to `regression_tests/` or `decoded/<target>/` root
 
 #### Step 2 — Run pytest and capture results
@@ -71,32 +76,31 @@ Delete `decoded/<target>/.test_tmp/` after the run, whether the tests pass or fa
 
 ## Reference data format (Mode A)
 
-Every reference file must have:
-- A human-readable header: format, column names, units
-- Data in scientific notation with full double-precision significant figures
-- A provenance record: source routine, implementation version, date generated
+Every reference file is CSV with a header and must record:
+- Column names for inputs and for predictions/probabilities/metric values
+- Continuous outputs at full precision (scientific notation with full significant figures)
+- A provenance record: legacy model version, weights identifier, seed, date generated
 
-**Reference data must come from the original binary, not from analytical re-derivation.**
+**Reference data must come from running the legacy model/pipeline, not from re-derivation
+or a re-implementation of the model.**
 
 ## Input coverage
 
-Choose inputs spanning the relevant domain with sufficient coverage:
-- Strongly nonlinear regime (large gradients, far from equilibrium)
-- Near any stationary point or characteristic feature
-- Intermediate regime
-- Near-boundary or near-asymptotic regime
+Choose inputs that exercise the model's behavior, not a uniform grid:
+- Representative entities/classes covering the common operating range
+- Edge cases: rare classes, near-decision-boundary cases, out-of-distribution-ish inputs, boundary sequence lengths / molecule sizes
+- A held-out evaluation slice (the same split the legacy pipeline evaluates on)
 
-Cluster points near features of interest rather than uniform spacing.
+Cluster on hard or ambiguous cases rather than uniform sampling.
 
 ## Default tolerances
 
 | Comparison | Default tolerance |
 |------------|------------------|
-| Primary output vs. original | $10^{-10}$ relative |
-| Derivative/gradient vs. original | $10^{-10}$ relative; $10^{-12}$ absolute near stationary points |
-| Derivative finite-difference consistency | $10^{-9}$ absolute |
-| Asymptotic/boundary vs. known limit | $10^{-8}$ in natural unit |
-| vs. Published reference | As stated in the reference |
+| Deterministic forward pass, same weights + inputs | $10^{-5}$ relative (cross-framework float32 drift) |
+| Predicted probabilities / regression outputs | $10^{-4}$ relative, or as the IR specifies |
+| Aggregate metric (accuracy, ROC-AUC, RMSE, F1) | match to the stated significant figures; small absolute tolerance |
+| Stochastic generative output | compare distributional metrics (validity / novelty / uniqueness, property distributions), not exact samples; fix seeds where the legacy code does |
 
 ## Accumulated lessons (subordinate to everything above)
 

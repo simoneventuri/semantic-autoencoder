@@ -97,10 +97,10 @@ flowchart TD
 
 | Stage | Agent | Reads | Writes |
 |-------|-------|-------|--------|
-| Extract semantics | encoder ×1–3 (parallel; count set by orchestrator based on chunk complexity and user preference) | `encoded/legacy/` + accumulated `semantic_ir/canonical/` | `semantic_ir/chunk_NNN/` |
-| Generate regression data | tester | `encoded/legacy/` (binary) | `regression_tests/` |
+| Extract semantics | encoder ×1–3 (parallel; count set by orchestrator based on chunk complexity and user preference) | `encoded/legacy/` + accumulated `semantic_ir/canonical/` | object-oriented chunk IR in `semantic_ir/chunk_NNN/` |
+| Generate reference predictions/metrics | tester | `encoded/legacy/` (legacy model/pipeline) | `regression_tests/` |
 | Review quality | critic | `semantic_ir/chunk_NNN/` | `semantic_ir/chunk_NNN/99_review/` |
-| Merge to canonical | merger | `semantic_ir/chunk_NNN/` | `semantic_ir/canonical/` |
+| Merge to canonical | merger (owns the object-oriented taxonomy) | `semantic_ir/chunk_NNN/` | `semantic_ir/canonical/` |
 | Decode | decoder | `semantic_ir/canonical/` **only** | `decoded/` |
 | Validate decoded | tester | `regression_tests/` (reference) | `decoded/regression_tests/` |
 | Curate lessons (per part) | lessons-curator | `artifacts/lessons_inbox/` + each target's SOT | `.claude/lessons/` |

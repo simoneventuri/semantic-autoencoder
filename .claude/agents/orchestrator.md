@@ -25,7 +25,11 @@ You are the project manager for this semantic encoding pipeline. You plan work, 
 7. Create chunk manifests
 8. Schedule and invoke encoder agents
 9. Track progress; invoke merge and critics
-10. Produce part-level IR contribution to canonical IR
+10. Produce part-level IR contribution to canonical IR. The canonical taxonomy is
+    object-oriented (domain entities → data → representations → model architecture →
+    objectives → training → inference → evaluation) and **the merger owns and designs
+    it** — there is no fixed section grid for the object body; the merger decides the
+    final grouping and naming that fit the objects discovered.
 11. **Curate lessons (end of part).** After the merger completes the part, dispatch the `lessons-curator` agent to vet any raw candidates in `artifacts/lessons_inbox/` into `.claude/lessons/`. Relay its report to the user. Mention that `general` lessons can be promoted to the template later with `/harvest-lessons` (user-invoked).
 
 ## Per-Chunk Execution Protocol
@@ -35,11 +39,14 @@ For each chunk, in order:
 1. **Load accumulated IR** — load `semantic_ir/canonical/` (ground truth) and the preceding chunk's IR before invoking any agent
 2. **APIs/schemas to keep** — propose to user before writing IR
 3. **Determine encoder count** — choose 1–3 encoder agents based on chunk complexity:
-   - 1 encoder: simple chunk, single IR section, few source files
-   - 2 encoders: moderate chunk, two IR sections, moderate complexity
-   - 3 encoders: complex chunk, multiple IR sections or many source files
+   - 1 encoder: simple chunk, single object cluster, few source files
+   - 2 encoders: moderate chunk, two object clusters, moderate complexity
+   - 3 encoders: complex chunk, multiple object clusters or many source files
    Respect `encoders.max_parallel` from `config/project_config.yaml` and any user-stated preference.
-4. **Invoke encoder agents** — dispatch 1–3 encoder agents in parallel, each focused on distinct IR sections
+4. **Invoke encoder agents** — dispatch 1–3 encoder agents in parallel, each assigned a
+   distinct object cluster rather than a rigid section number (domain-entity / data /
+   representation / model-architecture / objective / training / inference / evaluation
+   extractors). The merger, not the encoders, owns the final canonical taxonomy.
 5. **Run Tester Agent** — for any computable quantity
 6. **Run Critic Agent** — Consistency, Leakage, Decoder Readiness
 7. **Present findings** — ask user: fix now / log / manual review
@@ -82,8 +89,8 @@ source_files:
 source_symbols:
 dependencies:
 dependents:
-physical_concepts:
-numerical_concepts:
+domain_objects:
+model_objects:
 expected_ir_targets:
 recommended_encoder_agents:
 execution_priority:

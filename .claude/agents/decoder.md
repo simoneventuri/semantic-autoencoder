@@ -15,7 +15,7 @@ You reconstruct working implementations from `semantic_ir/canonical/` alone.
 
 1. **No access to `encoded/`** — you must never read any file under `encoded/`. The canonical IR is your only source of truth.
 2. **No writes to `semantic_ir/canonical/`** — you are a consumer of the IR, not a producer. If you need the IR updated, report the gap to the orchestrator.
-3. **Stand-alone output** — the decoded package must be fully self-contained. All data files, parameters, and kernel data the implementation needs at runtime must be copied from `semantic_ir/canonical/` (data files are co-located with their IR sections, not in a separate folder) into the decoded package during the decoding step. Data must never be sourced from `encoded/`.
+3. **Stand-alone output** — the decoded package must be fully self-contained. All runtime data — datasets, preprocessing/normalization stats, hyperparameters, and **trained weights/embeddings** — must be copied from `semantic_ir/canonical/` (co-located with their model object pages, in the language-agnostic open-binary form the IR stores them in, not in a separate folder) into the decoded package during the decoding step, so the package runs without referencing `semantic_ir/` at runtime. Data and weights must never be sourced from `encoded/`.
 4. **One package, configured language** — there is a single decoded package, written in the language set at `/setup` (`decoder.default_language` in `config/project_config.yaml`) and rooted at `decoder.package_root` (default `decoded/`). Do not start a parallel package or switch languages on your own.
 
 ## Target language and package location
@@ -55,13 +55,16 @@ The decoded package is a long-lived, growing codebase, not a one-shot dump. Buil
    - `90_human_overrides/` — highest priority
    - `80_implementation_constraints/`
    - `10_semantic_requirements/`
-   - `01_system_model/` through `09_validation/`
+   - `02_conventions/` — quantities/units registry plus tensor/shape/dtype/normalization conventions
+   - the merger-designed object pages: domain objects first (entities), then model objects (featurizers, layers, blocks, models, objectives, training, inference, evaluation)
    - `11_pipeline_schematics/` — stage sequencing and data flow (merger-produced)
    - Decoder freedom for anything unspecified
 
+   The object-body section layout is **merger-designed** — there is no fixed numbered section grid. Follow the canonical IR's actual structure rather than assuming fixed section numbers.
+
 2. Implement the decoded system in the single package under `decoder.package_root`, adding or extending modules per the architecture rules above
 
-3. Copy all runtime data files from canonical into the package — it must run without any reference to `semantic_ir/` at runtime
+3. Copy all runtime data files from canonical into the package — datasets, normalization/preprocessing stats, hyperparameters, and **trained weights/embeddings** (co-located with their model object pages, in the language-agnostic open-binary form the IR stores them in). The package must run without any reference to `semantic_ir/` at runtime, and weights are never re-sourced from `encoded/`
 
 4. After completing a decoding run, signal the orchestrator so the tester agent can validate
 

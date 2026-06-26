@@ -68,8 +68,8 @@ source_files:
 source_symbols:
 dependencies:
 dependents:
-physical_concepts:
-numerical_concepts:
+domain_objects:
+model_objects:
 expected_ir_targets:
 recommended_encoder_agents:
 execution_priority:
@@ -87,15 +87,19 @@ For each chunk, execute in order:
 
 2. **Propose APIs/schemas to keep** — collect user feedback
 
-3. **Determine encoder count** — choose 1–3 based on chunk complexity, capped by `encoders.max_parallel`:
-   - 1 encoder: simple chunk, single IR section, few source files
-   - 2 encoders: moderate chunk, two or three IR sections
-   - 3 encoders: complex chunk, many IR sections or large source files
+3. **Determine encoder count** — choose 1–3 based on chunk complexity, capped by `encoders.max_parallel`.
+   Assign encoders by **object cluster**, not a fixed section grid — e.g. domain-entity,
+   data, representation/featurizer, model-architecture, objective, training, inference,
+   or evaluation extractors — each owning the object pages it discovers. The merger designs
+   the final canonical taxonomy; encoders need not agree on section numbering up front.
+   - 1 encoder: simple chunk, a single object cluster, few source files
+   - 2 encoders: moderate chunk, two or three object clusters
+   - 3 encoders: complex chunk, many object clusters or large source files
    State the chosen count and rationale before dispatching.
 
-4. **Dispatch encoder agents** — use the `encoder` subagent (1–3 in parallel); specify which IR sections each should produce
+4. **Dispatch encoder agents** — use the `encoder` subagent (1–3 in parallel); specify which object cluster each should extract
 
-5. **Dispatch tester agent** — use the `tester` subagent; it runs the original binary and produces `regression_tests/<UnitName>/`
+5. **Dispatch tester agent** — use the `tester` subagent; it runs the legacy model/pipeline and produces reference predictions/metrics under `regression_tests/<UnitName>/`
 
 6. **Dispatch critic agent** — use the `critic` subagent for all three checks (consistency, leakage, decoder readiness)
 

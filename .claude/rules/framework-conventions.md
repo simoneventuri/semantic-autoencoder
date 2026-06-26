@@ -22,7 +22,7 @@ the official Claude Code conventions below. Reference: code.claude.com/docs/en/
 - Target **under 200 lines**. Longer files load fully but reduce adherence.
 - Put project conventions, architecture facts, and "always do X" rules here.
 - Move step-by-step procedures into skills; move topic-specific rules into `.claude/rules/`.
-- Do not put domain physics or run instructions here — those belong in domain skills.
+- Do not put domain knowledge or run instructions here — those belong in domain skills.
 
 ---
 
@@ -99,6 +99,6 @@ new project using the semantic-autoencoder framework:
 
 | Skill | Created by | Content |
 |-------|-----------|---------|
-| `explain-domain` | `/setup` step | Domain physics, key concepts, IR section guide |
-| `run-legacy` | `/setup` step | How to install and run the legacy binary |
+| `explain-domain` | `/setup` step | Domain knowledge (chem/bio + ML), key concepts, IR object/section guide |
+| `run-legacy` | `/setup` step | How to install and run the legacy model/pipeline |
 | `run-decoded` | `/orchestrate` (before first decoder dispatch) | How to install and run the decoded package |

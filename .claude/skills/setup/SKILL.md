@@ -127,15 +127,18 @@ After the user chooses, create `semantic_ir/canonical/10_semantic_requirements/n
 
 ---
 
-## Step 0.7b — Units registry and default policy
+## Step 0.7b — Quantities and conventions
 
 Explain briefly:
-> "I keep all units in one place. Every physical dimension gets a single default
-> unit; the IR expresses quantities in that default and names units by their
-> shortest standard symbol. Every other unit is recorded once, with its conversion
-> to the default, in a project-wide units registry."
+> "I centralize two things in one place. (a) **Dimensioned quantities** — for the
+> genuinely physical quantities this domain carries (target labels and descriptors,
+> e.g. solubility, binding affinity), each dimension gets one default unit and every
+> other unit is recorded with its conversion to that default. Most ML tensors are
+> dimensionless and stay out of this registry. (b) **Tensor/value conventions** —
+> shapes, dtypes, normalization statistics, vocabularies, and random-seed/determinism
+> notes; the ML analog of units discipline."
 
-Ask:
+Ask (about the dimensioned quantities only):
 > "How should I pick each dimension's default unit?
 > 1. **Adopt the legacy code's prevailing unit** (default) — whatever the original
 >    code mostly works in becomes the default; I discover this while encoding and
@@ -144,16 +147,19 @@ Ask:
 >    and I convert everything to it.
 > Either way you can pin individual overrides."
 
-Record under `units:` (`default_policy: adopt-legacy | user-specified`, plus any
+Record under `conventions:` (`default_policy: adopt-legacy | user-specified`, plus any
 `default_overrides`).
 
-Then create the registry **skeletons** from the Units Registry Template in
+Then create the **skeletons** from the Quantities & Conventions Template in
 `config/project_config.example.yaml`:
-- `semantic_ir/canonical/02_quantities/units.md` — the default-unit-per-dimension
-  table (left as placeholders to be filled as quantities are encoded, unless the
+- `semantic_ir/canonical/02_conventions/quantities.md` — the default-unit-per-dimension
+  table (placeholders to be filled as dimensioned quantities are encoded, unless the
   user pinned defaults now) plus a one-line statement of the chosen policy.
-- `semantic_ir/canonical/02_quantities/unit_registry.csv` — header row only
+- `semantic_ir/canonical/02_conventions/quantity_registry.csv` — header row only
   (`symbol,aliases,dimension,is_default,to_default_formula`).
+- `semantic_ir/canonical/02_conventions/tensor_conventions.md` — headed skeleton for
+  shape/axis conventions, dtypes, normalization statistics, vocabularies, and
+  seed/determinism notes (filled as model objects are encoded).
 The merger owns these files thereafter; encoders append to them.
 
 ---
@@ -219,61 +225,73 @@ description: Reference knowledge for agents operating on <PROJECT>. Covers the s
 
 ## What <SYSTEM> is
 
-TODO: Describe what the legacy system computes. What are its inputs, outputs, and
-main execution stages? (From supplementary materials gathered in Step 0.6.)
+TODO: Describe what the legacy ML/AI system does — the learning task(s) (prediction /
+classification / generative design), the chem/bio entities it operates on, its inputs
+(datasets, structures, sequences), outputs (predictions, generated designs, metrics),
+and main pipeline stages. (From supplementary materials gathered in Step 0.6.)
 
 ## Key concepts
 
 TODO: List the 3–5 most important domain concepts an encoder needs to understand
-(e.g., physical model, governing equations, key quantities).
+(e.g., the domain entities — molecules / residues / binding sites — and how they are
+represented; the model family; the training objective; the evaluation metrics).
 
-## Canonical IR section guide
+## Canonical IR taxonomy guide
+
+The IR is **object-oriented**: domain entities (chem/bio) composed upward into model
+objects. The **merger owns the final taxonomy** — the object-body layout below is a
+recommended default it may restructure to fit the objects actually discovered. The
+reserved sections keep their names so every agent can rely on them.
 
 | Section | Purpose | Key question |
 |---------|---------|--------------|
-| `01_system_model` | What physical/logical system is modeled? | What world? What assumptions? |
-| `02_quantities` | What quantities exist? Units? | What can vary? What is fixed? |
-| `03_equations` | Governing relationships | What equations define behavior? |
-| `04_representations` | How are quantities represented? | Arrays? Grids? Particles? |
-| `05_discretization` | How are continuous equations approximated? | FD? FEM? Quadrature? |
-| `06_algorithms` | What procedures are used? | Newton? Runge-Kutta? |
-| `07_numerics` | Numerical behavior | Stability? Tolerances? Singularities? |
-| `08_execution_model` | In what order does computation occur? | Dependencies? Events? |
-| `09_validation` | How do we know it's correct? | Tests? Reference data? |
-| `10_semantic_requirements` | What must any re-implementation do? | Required? Forbidden? Allowed? |
-| `11_pipeline_schematics` | How do stages connect into a pipeline? | What flows between stages? (merger-produced) |
-| `80_implementation_constraints` | Required APIs, file layouts, deployment | Only when justified |
-| `90_human_overrides` | Human-owned, highest priority | Never modified by agents |
-| `99_review` | Quality flags, gaps, contradictions | Critic findings |
+| `00_task_and_domain` | The learning problem(s) and scientific objective | Predict / classify / generate what, over which entities? |
+| `domain_objects/` | The chem/bio entities | Atoms, molecules, residues, sites, sequences, reactions — attributes & relationships? |
+| `data/` | Datasets and how they are prepared | Sources, provenance, splits, labels, preprocessing? |
+| `model_objects/` | Featurizers, layers, blocks, models | What is the architecture? Interfaces (shapes/dtypes)? Learned parameters? |
+| `objectives/` | Losses, regularizers, constraints | What is optimized? |
+| `training/` | Optimization procedure | Optimizer, schedule, hyperparameters, loop? |
+| `inference/` | Prediction / generation / sampling | Forward pass, decoding, sampling, validity filtering? |
+| `evaluation/` | Metrics and protocols | Accuracy / AUC / RMSE / validity-novelty-uniqueness? |
+| `execution/` | Stage order and data flow | What runs in what order? |
+| `02_conventions` *(reserved)* | Dimensioned-quantity units + tensor shape/dtype/normalization conventions | What units? What shapes/dtypes/normalization/vocab/seeds? |
+| `10_semantic_requirements` *(reserved)* | What any re-implementation must do | Required? Forbidden? Allowed? |
+| `11_pipeline_schematics` *(reserved)* | How stages connect into a pipeline | What flows between stages? (merger-produced) |
+| `80_implementation_constraints` *(reserved)* | Required APIs, frameworks, formats | Only when justified |
+| `90_human_overrides` *(reserved)* | Human-owned, highest priority | Never modified by agents |
+| `99_review` *(reserved)* | Quality flags, gaps, contradictions | Critic findings |
 
 ## Output conventions
 
 - IR files use GitHub-flavored Markdown
 - All math in `$...$` (inline) or `$$...$$` (display) — never bare Unicode
 - Statement format: `statement:` + `source:` + `confidence:` + `status:`
-- Reference data files: CSV with `#`-prefixed headers, scientific notation, full double-precision
+- Trained weights/embeddings are SIR data, co-located with their model object's page, in open binary (HDF5 / safetensors-style) — never pickle/.pt/.npy
+- Reference data files (in `regression_tests/`): CSV with `#`-prefixed headers, full precision
 
 ## Known behavioral hazards
 
-TODO: Document any as-built deviations from physical intent that decoded
-implementations MUST reproduce (not fix).
+TODO: Document any as-built behaviors decoded implementations MUST reproduce (not
+"fix") — e.g. a normalization applied at train but not inference, a fixed random seed,
+a non-obvious label encoding, leakage the legacy pipeline tolerates.
 ```
 
 ### `.claude/skills/run-legacy/SKILL.md`
 
-How to install and run the legacy binary. Used by the tester agent to generate
-regression reference data.
+How to install and run the legacy model/pipeline. Used by the tester agent to generate
+reference predictions and metric values.
 
 ```markdown
 ---
 name: run-legacy
-description: Run the <PROJECT> legacy binary. Use when producing regression reference data or validating a build.
+description: Run the <PROJECT> legacy model/pipeline. Use when producing reference predictions/metrics or validating a build.
 disable-model-invocation: true
 ---
 
 # <PROJECT> Legacy Runner
 
 **`encoded/legacy/` is immutable. Never write to it — stage all output in `workspaces/`.**
+Stage any trained-weight files the model needs into `workspaces/` too; never modify them in place.
 
 ## Step 1 — Establish project root
 
@@ -284,13 +302,13 @@ echo "Project root: $PROJECT_ROOT"
 
 ## Step 2 — Source the environment
 
-TODO: Describe how to activate the runtime environment (env file, module load, conda activate, etc.).
+TODO: Describe how to activate the runtime environment (virtualenv/conda activate, env file, framework + GPU/CPU setup, etc.).
 
 \`\`\`bash
 source "$PROJECT_ROOT/.claude/<env-file>.sh"   # adjust as needed
 \`\`\`
 
-Stop if the binary cannot be found.
+Stop if the environment or model entry point cannot be found.
 
 ## Step 3 — Prepare workspace
 
@@ -324,7 +342,7 @@ rm -rf "$WORKSPACE"
 
 ## Install (only if Step 2 fails)
 
-TODO: Describe how to build the binary from source in `encoded/legacy/`.
+TODO: Describe how to install dependencies and obtain the model/weights for the legacy pipeline in `encoded/legacy/`.
 ```
 
 ### `.claude/skills/run-decoded/SKILL.md`
@@ -373,10 +391,11 @@ models:
 notation:
   style_file: semantic_ir/canonical/10_semantic_requirements/notation_style.md
 
-units:
-  registry_file: semantic_ir/canonical/02_quantities/units.md
-  registry_data: semantic_ir/canonical/02_quantities/unit_registry.csv
-  default_policy: adopt-legacy | user-specified
+conventions:
+  registry_file: semantic_ir/canonical/02_conventions/quantities.md
+  registry_data: semantic_ir/canonical/02_conventions/quantity_registry.csv
+  tensor_conventions: semantic_ir/canonical/02_conventions/tensor_conventions.md
+  default_policy: adopt-legacy | user-specified   # dimensioned quantities only
   default_overrides: {}        # optional {dimension: unit} pins
 
 decoder:

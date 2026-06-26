@@ -41,10 +41,11 @@ correct.
 
 ## Who this is for
 
-Research groups in academia, national labs, and large organizations sitting on big,
-old simulation codes — decades of physics, chemistry, and engineering knowledge locked
-inside Fortran, C, and MATLAB that no current team member fully understands, and that
-nobody wants to rewrite by hand.
+Research groups in academia, national labs, and large organizations sitting on
+ML/AI codebases for scientific discovery in chemistry and biology — property
+prediction, classification, and generative molecular and sequence design — written in
+fast-churning Python and deep-learning framework stacks that no current team member
+fully owns, and that nobody wants to rewrite by hand.
 
 ---
 
@@ -72,33 +73,47 @@ You stop maintaining N aging codebases and start maintaining one auditable model
 The encoder must recover everything needed to regenerate the system, and nothing that
 merely reflects how it happened to be written:
 
-- Physical and mathematical meaning
-- Governing equations and constraints
-- Quantities, units, and coordinate systems
-- Numerical algorithms and discretization schemes
-- Execution order and state transitions
-- Validation invariants and expected behavior
+- Learning task and scientific objective
+- Data semantics, schema, and provenance; train/val/test split definitions
+- Entity representations and featurization
+- Model architecture and layer composition
+- Learned-parameter semantics — and the parameter data itself
+- Loss and training objectives; optimization procedure and hyperparameters
+- Inference, sampling, and decoding procedure
+- Evaluation metrics and protocol
+- Numerical and stochastic behavior that affects results (seeds, determinism, normalization)
 
-Code names, file layout, module structure, and serialization formats are **not**
-preserved by default — they live only in `source:` provenance metadata, never in the
-meaning itself.
+The IR is organized object-orientedly: domain entities (atoms, residues, binding sites,
+sequences, …) compose upward into featurizers, layers, blocks, and models, with the
+**merger** owning the final taxonomy.
+
+Framework and library choice, file and module layout, class hierarchy, code names, and
+serialization formats are **not** preserved by default — they live only in `source:`
+provenance metadata, never in the meaning itself.
 
 ---
 
 ## Behavioral equivalence, not byte-level determinism
 
-A decoded implementation must behave like the original where behavior matters — not
-reproduce it byte for byte. Two consequences:
+A decoded model must reproduce the legacy model's predictions and evaluation metrics
+within ML-appropriate tolerances — not reproduce them bit for bit. Cross-framework
+float32 drift makes bit-exactness meaningless. Three consequences:
 
-- **Not all legacy code is source of truth.** Fortran-77-isms, dead branches, and
-  accidental implementation details don't have to carry over. If the decoded function
-  has a different name, a different file layout, or a different language — who cares.
-  The SIR is language-agnostic by default (override per-project only when you truly need
-  a specific API or format preserved).
+- **Not all legacy code is source of truth.** Framework idioms, dead branches, and
+  accidental implementation details don't have to carry over. If the decoded model has
+  a different layer name, a different file layout, or a different framework — who cares.
+  The SIR is framework-agnostic by default (override per-project only when you truly need
+  a specific API or format preserved). Trained weights are carried as language-agnostic
+  data — an open binary format (HDF5 / safetensors-style), never framework-native
+  `pickle` / `.pt` / `.npy`.
 - **Equivalence is verified, not assumed.** Regression testing is the backbone: the
-  original binary generates reference data, and the decoded implementation is checked
-  against it. That feedback is also how we know the extraction is *complete* — we keep
-  the SIR as minimal as possible while continuously confirming it's still enough.
+  legacy model produces reference predictions and metric values for fixed inputs, and
+  the decoded model is checked against them. That feedback is also how we know the
+  extraction is *complete* — we keep the SIR as minimal as possible while continuously
+  confirming it's still enough.
+- **Stochastic generative models are matched distributionally.** Equivalence is measured
+  on validity, novelty, and uniqueness, and on property distributions — not on exact
+  samples — with seeds fixed wherever the legacy code fixes them.
 
 The success criterion: **a decoder can regenerate an equivalent implementation without
 ever reading the original source.** When that holds, the original can be discarded.
@@ -110,17 +125,17 @@ ever reading the original source.** When that holds, the original can be discard
 The same extract-once, decode-many loop serves very different goals depending on what
 you do with the Semantic IR:
 
-1. **Modernization & language migration** — Fortran  / MATLAB → a modern target; the canonical legacy problem, in science and in business.
-2. **Hardware retargeting & performance portability** — one IR, many backends (CPU, GPU, future accelerators); re-decode when the hardware changes instead of rewriting. Vectorization / threading / MPI→task-based restructuring decided at decode time.
-3. **Differentiable & ML-native rewrites** — decode to JAX/PyTorch for automatic differentiation and adjoints built on already-extracted governing equations. Natural feedstock for PINNs, neural operators, and ROMs
-4. **Verification, validation & regulatory** — the IR is an auditable specification and the regression harness its evidence trail; supports safety-critical recertification and export / IP review.
-5. **Comprehension, documentation & onboarding** — auto-generate the "math behind the code" and surface hidden assumptions, unit mismatches, and coordinate-frame bugs.
-6. **Knowledge preservation** — capture a retiring expert's code before the knowledge leaves; a Rosetta Stone for codes whose authors are gone and whose docs are lost.
-7. **Reproducibility & open science** — publish the IR alongside a paper as the canonical, language-independent model; enable independent replication. Cross-group standardization: a community decodes one shared SIR instead of maintaining N divergent codes of "the same" model.
-8. **Consolidation & coupling** — reconcile drifted forks into one source of truth; align interfaces, units, and frames before coupling multi-physics components. Semantic diff between two versions of a code.
-9. **Testing & quality** — generate regression and property tests from extracted invariants; run differential testing of original vs. decoded.
-10. **Auditing AI-generated code** — round-trip LLM-written code through an IR to check it still encodes the intended model.
-11. **Research directions** — an IR corpus as training and evaluation data for code-understanding models, a bridge to formal methods, and clean specs for teaching numerical methods.
+1. **Modernization & migration** — an inherited Python + deep-learning framework stack → a modern, maintained target; the canonical legacy problem, in science and in business.
+2. **Hardware & framework retargeting** — one IR, many backends; re-decode across PyTorch ↔ JAX ↔ TensorFlow, or to a new accelerator, instead of rewriting. Device placement, vectorization, and parallelism decided at decode time.
+3. **Differentiable & ML-native rewrites** — already ML-native: decode to JAX/PyTorch for automatic differentiation and end-to-end training built on the already-extracted architecture and objectives.
+4. **Verification, model cards & regulatory** — the IR is an auditable model specification and the regression harness its evidence trail; supports model cards, recertification, and export / IP review.
+5. **Comprehension, documentation & onboarding** — auto-generate the "model behind the code" and surface hidden assumptions, shape/dtype/normalization mismatches, and data-leakage between splits.
+6. **Knowledge preservation** — capture a departing ML researcher's pipeline before the knowledge leaves; a Rosetta Stone for models whose authors are gone and whose docs are lost.
+7. **Reproducibility & open science** — publish the IR alongside a paper as the canonical, framework-independent model spec; enable independent replication. Cross-group standardization: a community decodes one shared SIR instead of maintaining N divergent forks of "the same" model.
+8. **Consolidation of drifted forks** — reconcile divergent copies of a model into one source of truth; align data schemas and interfaces before recombining. Semantic diff between two versions of a model.
+9. **Testing & quality** — generate regression and property tests from extracted invariants; run differential testing of legacy vs. decoded against reference predictions.
+10. **Auditing AI-generated code** — round-trip LLM-written model code through an IR to check it still encodes the intended model.
+11. **Research directions** — an IR corpus as training and evaluation data for code-understanding models, a bridge to formal methods, and clean specs for teaching ML model design.
 
 ---
 
@@ -204,7 +219,7 @@ semantic_ir/      — Extracted knowledge (the primary product)
   canonical/      — Authoritative merged IR
   chunk_NNN/      — Per-chunk working artifacts
 decoded/          — Decoder output: self-contained reimplementation
-regression_tests/ — Reference data from the original binary
+regression_tests/ — Reference predictions and metrics from the legacy model
 artifacts/        — Orchestration planning (manifests, chunk plans)
 workspaces/       — Temporary run outputs (disposable)
 config/           — Project config (generated by /setup)
